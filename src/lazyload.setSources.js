@@ -40,7 +40,13 @@ export const setSourcesImg = (element, settings) => {
 	const sizesDataValue = getData(element, settings.data_sizes);
 	setAttributeIfValue(element, "sizes", sizesDataValue);
 	const srcsetDataValue = getData(element, srcsetDataName);
-	setAttributeIfValue(element, "srcset", srcsetDataValue, toWebpFlag);
+    setAttributeIfValue(element, "srcset", srcsetDataValue, toWebpFlag);
+
+    if (supportsWebp) {
+        const srcsetWebpDataValue = getData(element, srcsetDataName + '-webp');
+        setAttributeIfValue(element, "srcset", srcsetWebpDataValue, toWebpFlag);
+    }
+
 	const srcDataValue = getData(element, settings.data_src);
 	setAttributeIfValue(element, "src", srcDataValue, toWebpFlag);
 };
