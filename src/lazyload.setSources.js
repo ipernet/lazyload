@@ -1,6 +1,4 @@
 import { getData } from "./lazyload.data";
-import { supportsWebp } from "./lazyload.environment";
-import { replaceExtToWebp } from "./lazyload.webp";
 import { purgeOneElement } from "./lazyload.purge";
 
 export const setSourcesInChildren = function(
@@ -26,11 +24,12 @@ export const setAttributeIfValue = function(
 	if (!value) {
 		return;
 	}
-	element.setAttribute(attrName, replaceExtToWebp(value, toWebpFlag));
+	element.setAttribute(attrName, value);
 };
 
 export const setSourcesImg = (element, settings) => {
-	const toWebpFlag = supportsWebp && settings.to_webp;
+    const toWebpFlag = false;
+    const supportsWebp = !!settings.webp_support;
 	const srcsetDataName = settings.data_srcset;
 	const parent = element.parentNode;
 
@@ -40,7 +39,13 @@ export const setSourcesImg = (element, settings) => {
 	const sizesDataValue = getData(element, settings.data_sizes);
 	setAttributeIfValue(element, "sizes", sizesDataValue);
 	const srcsetDataValue = getData(element, srcsetDataName);
-	setAttributeIfValue(element, "srcset", srcsetDataValue, toWebpFlag);
+    setAttributeIfValue(element, "srcset", srcsetDataValue, toWebpFlag);
+
+    if (supportsWebp) {
+        const srcsetWebpDataValue = getData(element, srcsetDataName + '-webp');
+        setAttributeIfValue(element, "srcset", srcsetWebpDataValue, toWebpFlag);
+    }
+
 	const srcDataValue = getData(element, settings.data_src);
 	setAttributeIfValue(element, "src", srcDataValue, toWebpFlag);
 };
@@ -61,17 +66,16 @@ export const setSourcesVideo = (element, settings) => {
 };
 
 export const setSourcesBgImage = (element, settings) => {
-	const toWebpFlag = supportsWebp && settings.to_webp;
 	const srcDataValue = getData(element, settings.data_src);
 	const bgDataValue = getData(element, settings.data_bg);
 
 	if (srcDataValue) {
-		let setValue = replaceExtToWebp(srcDataValue, toWebpFlag);
+		let setValue = srcDataValue;
 		element.style.backgroundImage = `url("${setValue}")`;
 	}
 
 	if (bgDataValue) {
-		let setValue = replaceExtToWebp(bgDataValue, toWebpFlag);
+		let setValue = bgDataValue;
 		element.style.backgroundImage = setValue;
 	}
 };
