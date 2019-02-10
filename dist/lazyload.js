@@ -7,9 +7,53 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 })(this, function () {
 	'use strict';
 
+	var replaceExtToWebp = function replaceExtToWebp(value, condition) {
+		return condition ? value.replace(/\.(jpe?g|png)/gi, ".webp") : value;
+	};
+
+	var detectWebp = function detectWebp(callback) {
+		var webpData = "data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=";
+
+		if (!supportsCreateImageBitmap || !supportsFetch) {
+			return callback(false);
+		}
+
+		return fetch(webpData).then(function (response) {
+			if (!response || typeof response.blob === "undefined") {
+				return callback(false);
+			}
+
+			return response.blob();
+		}).then(function (blob) {
+			if (window.createImageBitmap(blob)) {
+				return callback(true);
+			}
+
+			return callback(false);
+		});
+	};
+
+	var runningOnBrowser = typeof window !== "undefined";
+
+	var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro)bot|crawl|spider/i.test(navigator.userAgent);
+
+	var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+
+	var supportsClassList = runningOnBrowser && "classList" in document.createElement("p");
+
+	var supportsCreateImageBitmap = runningOnBrowser && "createImageBitmap" in window;
+
+	var supportsFetch = runningOnBrowser && "fetch" in window;
+
+	var supportsWebp = false;
+
+	detectWebp(function (result) {
+		supportsWebp = result; // Async
+	});
+
 	var defaultSettings = {
 		elements_selector: "img",
-		container: document,
+		container: isBot || runningOnBrowser ? document : null,
 		threshold: 300,
 		thresholds: null,
 		data_src: "src",
@@ -110,31 +154,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			}
 		}
 	}
-
-	var replaceExtToWebp = function replaceExtToWebp(value, condition) {
-		return condition ? value.replace(/\.(jpe?g|png)/gi, ".webp") : value;
-	};
-
-	var detectWebp = function detectWebp() {
-		var webpString = "image/webp";
-		var canvas = document.createElement("canvas");
-
-		if (canvas.getContext && canvas.getContext("2d")) {
-			return canvas.toDataURL(webpString).indexOf('data:' + webpString) === 0;
-		}
-
-		return false;
-	};
-
-	var runningOnBrowser = typeof window !== "undefined";
-
-	var isBot = runningOnBrowser && !("onscroll" in window) || /(gle|ing|ro)bot|crawl|spider/i.test(navigator.userAgent);
-
-	var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
-
-	var supportsClassList = runningOnBrowser && "classList" in document.createElement("p");
-
-	var supportsWebp = runningOnBrowser && detectWebp();
 
 	var setSourcesInChildren = function setSourcesInChildren(parentTag, attrName, dataAttrName, toWebpFlag) {
 		for (var i = 0, childTag; childTag = parentTag.children[i]; i += 1) {

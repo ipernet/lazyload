@@ -1,6 +1,58 @@
+const replaceExtToWebp = (value, condition) =>
+	condition ? value.replace(/\.(jpe?g|png)/gi, ".webp") : value;
+
+const detectWebp = callback => {
+	var webpData =
+		"data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=";
+
+	if (!supportsCreateImageBitmap || !supportsFetch) {
+		return callback(false);
+	}
+
+	return fetch(webpData).
+		then(function(response) {
+			if (!response || typeof response.blob === "undefined") {
+				return callback(false);
+			}
+
+			return response.blob();
+		}).
+		then(function(blob) {
+			if (window.createImageBitmap(blob)) {
+				return callback(true);
+			}
+
+			return callback(false);
+		});
+};
+
+const runningOnBrowser = typeof window !== "undefined";
+
+const isBot =
+	(runningOnBrowser && !("onscroll" in window)) ||
+	(typeof navigator !== "undefined" &&
+		/(gle|ing|ro)bot|crawl|spider/i.test(navigator.userAgent));
+
+const supportsIntersectionObserver =
+	runningOnBrowser && "IntersectionObserver" in window;
+
+const supportsClassList =
+	runningOnBrowser && "classList" in document.createElement("p");
+
+const supportsCreateImageBitmap =
+	runningOnBrowser && "createImageBitmap" in window;
+
+const supportsFetch = runningOnBrowser && "fetch" in window;
+
+var supportsWebp = false;
+
+detectWebp(result => {
+	supportsWebp = result; // Async
+});
+
 const defaultSettings = {
 	elements_selector: "img",
-	container: document,
+	container: isBot || runningOnBrowser ? document : null,
 	threshold: 300,
 	thresholds: null,
 	data_src: "src",
@@ -92,34 +144,6 @@ function autoInitialize(classObj, options) {
 		}
 	}
 }
-
-const replaceExtToWebp = (value, condition) =>
-	condition ? value.replace(/\.(jpe?g|png)/gi, ".webp") : value;
-
-const detectWebp = () => {
-	var webpString = "image/webp";
-	var canvas = document.createElement("canvas");
-
-	if (canvas.getContext && canvas.getContext("2d")) {
-		return canvas.toDataURL(webpString).indexOf(`data:${webpString}`) === 0;
-	}
-
-	return false;
-};
-
-const runningOnBrowser = typeof window !== "undefined";
-
-const isBot =
-	(runningOnBrowser && !("onscroll" in window)) ||
-	/(gle|ing|ro)bot|crawl|spider/i.test(navigator.userAgent);
-
-const supportsIntersectionObserver =
-	runningOnBrowser && "IntersectionObserver" in window;
-
-const supportsClassList =
-	runningOnBrowser && "classList" in document.createElement("p");
-
-const supportsWebp = runningOnBrowser && detectWebp();
 
 const setSourcesInChildren = function(
 	parentTag,
